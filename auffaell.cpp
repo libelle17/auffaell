@@ -298,7 +298,8 @@ void hhcl::pvirtfuehraus() //α
 						int reinz{0},obfalsch{0};
 						const double iststd{strtod(ArtDp.c_str(),0)};
 						string pid;
-						const string sqlteil{" FROM quelle.eintraege WHERE zeitpunkt BETWEEN "+mytag+" AND ADDDATE("+mytag+",1) AND (art = '"+cjj(cerg,1)+"' OR ((inhalt COLLATE latin1_bin LIKE '%Mitarbeiter: "+cjj(cerg,1)+"%' OR inhalt COLLATE latin1_bin LIKE '% "+cjj(cerg,1)+"' OR inhalt COLLATE latin1_bin LIKE '% ("+cjj(cerg,1)+")') AND NOT inhalt COLLATE latin1_bin LIKE '%mit "+cjj(cerg,1)+"%'))"};
+////						const string sqlteil{" FROM quelle.eintraege WHERE zeitpunkt BETWEEN "+mytag+" AND ADDDATE("+mytag+",1) AND (art = '"+cjj(cerg,1)+"' OR ((inhalt COLLATE latin1_bin LIKE '%Mitarbeiter: "+cjj(cerg,1)+"%' OR inhalt COLLATE latin1_bin LIKE '% "+cjj(cerg,1)+"' OR inhalt COLLATE latin1_bin LIKE '% ("+cjj(cerg,1)+")') AND NOT inhalt COLLATE latin1_bin LIKE '%mit "+cjj(cerg,1)+"%'))"};
+						const string sqlteil{" FROM quelle.eintraege WHERE zeitpunkt BETWEEN "+mytag+" AND ADDDATE("+mytag+",1) AND (art = '"+cjj(cerg,1)+"' OR ((inhalt LIKE '%Mitarbeiter: "+cjj(cerg,1)+"%' OR inhalt LIKE '% "+cjj(cerg,1)+"' OR inhalt LIKE '% ("+cjj(cerg,1)+")') AND NOT inhalt LIKE '%mit "+cjj(cerg,1)+"%'))"};
 						const string reints{"SELECT COUNT(0)"+sqlteil};
 						RS reint(My,reints,0,ZDB);
 						if (reint.obqueryfehler) {
