@@ -252,7 +252,7 @@ void hhcl::pvirtfuehraus() //α
 		agd<<"    </STYLE>"<<endl;
 		agd<<"</HEAD>"<<endl;
 		agd<<"<BODY LANG=\"de-DE\" DIR=\"LTR\">"<<endl;
-		RS ma(My,"SELECT persnr,kuerzel,nachname,vorname,if(aus=0,'',aus) FROM mitarbeiter WHERE ISNULL(aus) OR aus=0 OR aus>SUBDATE(NOW(),21)",0,ZDB);
+		RS ma(My,"SELECT persnr,kuerzel,nachname,vorname,if(aus=0,'',aus) FROM mitarbeiter WHERE kuerzel<>'' AND (ISNULL(aus) OR aus=0 OR aus>SUBDATE(NOW(),21))",0,ZDB);
 		if (ma.obqueryfehler) {
 			cout<<"Fehler bei ma: "<<(int)ma.obqueryfehler<<endl;
 		} else {
