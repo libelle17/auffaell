@@ -1255,7 +1255,7 @@ int wartaufpids(pidvec *pidv,const ulong runden=0,const int obverb=0,const int o
 extern const string s_true; // ="true";
 extern const string s_dampand; // =" && ";
 extern const string s_gz; // ="gz";
-extern const string& defvors; // ="https://github.com/"+gitv+"/";
+extern const string& defvors; // ="git+ssh://github.com/"+gitv+"/";
 extern const string& defnachs; // ="/archive/master.tar.gz";
 void viadd(string *const cmdp,string* const zeigp,const string& datei,const uchar ro=0,const uchar hinten=0, const uchar unten=0);
 int schluss(const int fnr,const string text={},int oblog=0);

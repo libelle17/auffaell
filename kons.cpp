@@ -5118,7 +5118,7 @@ const string& spath=
 const string s_true{"true"};
 const string s_dampand{"&&"};
 const string s_gz{"gz"};
-const string& defvors{"https://github.com/"+gitv+"/"};
+const string& defvors{"git+ssh://github.com/"+gitv+"/"};
 const string& defnachs{"/archive/master.tar.gz"};
 
 // wird aufgerufen in main
@@ -5614,7 +5614,7 @@ void hcl::virtzeigversion(const string& ltiffv/*=string()*/)
 	//// strftime(buf, sizeof(buf), "%d.%m.%Y %T", &tm);
 	//// cout<<"              "<<Txk[T_Kompiliert]<<blau<<buf<<schwarz<<endl;
 	cout<<"              "<<Txk[T_Kompiliert]<<blau<<put_time(&tm,"%d.%m.%Y %T")<<schwarz<<endl;
-	cout<<Txk[T_Quelle]<<blau<<defvors/*//"https://github.com/libelle17/"*/<<meinname<<schwarz<<endl;
+	cout<<Txk[T_Quelle]<<blau<<defvors/*//"git+ssh://github.com/libelle17/"*/<<meinname<<schwarz<<endl;
 	cout<<Txk[T_Installationsverzeichnis]<<blau<<instvz<<schwarz<<endl;
 	if (!ltiffv.empty())
 		cout<<Txk[T_Libtiff_Version]<<blau<<ltiffv.substr(0,ltiffv.find("\n"))<<schwarz<<endl;
