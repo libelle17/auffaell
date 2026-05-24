@@ -306,9 +306,10 @@ git: README.md
 	$(call setz_gitv,".")
 	@git config --global push.default simple
 	@git add -u
-	@git commit -m "Version $$(cat versdt)"
-	@grep remote\ \"origin\"] .git/config $(KR)||git remote add origin https://github.com/$$(sed 's/"//g' gitvdt)/$(DPROG).git
+	@git commit --allow-empty -m "Version $$(cat versdt)"
+	@{ git remote get-url origin $(KR)&&git remote set-url origin https://github.com/$$(sed 's/"//g' gitvdt)/$(DPROG).git||git remote add origin https://github.com/$$(sed 's/"//g' gitvdt)/$(DPROG).git;}
 	@git push -u origin master
+	@printf "Fertig mit make .git\n"
 
 .PHONY: giterlaub
 giterlaub:
@@ -367,7 +368,7 @@ endif
 	-@if ! test -f instvz; then printf \"$$(pwd)\" >instvz; fi; # wird in kons.cpp verwendet
 	-$(CC) $(DEBUG)$(DEPFLAGS) $(CFLAGS) -c $< $(BFA);
 	-@sed -i 's/versdt //g;s/gitvdt //g' $(DEPDIR)/*.Td
-	-@if test -s fehler.txt; then vi +0/"error:\|Fehler:\|Warnung:\|warning:" fehler.txt; else rm -f fehler.txt; fi;
+	-@if test -s fehler.txt; then [ -t 1 ] && vi +0/"error:\|Fehler:\|Warnung:\|warning:" fehler.txt || cat fehler.txt; else rm -f fehler.txt; fi;
 #	-@$(shell $(POSTCOMPILE))
 	@if test -s fehler.txt; then false; fi;
 
@@ -497,8 +498,8 @@ endef
 
 define priv_html
 	-@printf " erstelle/generating:%b$(1)%b..." $(blau) $(reset)
-	-@groff -mandoc -Thtml -v $(KR);EXC="$$$$?"; \
-		bp=$$$$(echo $(PGROFF));for p in $$$$bp;do { [ $$$$EXC -eq 0 ]&&which groff $(KR)&&$(SPR) $$$$p $(KR);}||{ sh configure inst _ $$$$p verbose;};done;:;
+	-@groff -mandoc -Thtml -v $(KR);EXC="$$?"; \
+		bp=$$(echo $(PGROFF));for p in $$bp;do $(SPR) $$p $(KR)||{ sh configure inst _ $$p verbose;};done;:;
 	-@rm -f $(1).html
 	-@sed -e 's/²gitv²/$(GITV)/g;s/²DPROG²/$(DPROG)/g;'\
 	 -e 's/Ä/\&Auml;/g;s/Ö/\&Ouml;/g;s/Ü/\&Uuml;/g;s/ä/\&auml;/g;s/ö/\&ouml;/g;s/ü/\&uuml;/g;s/ß/\&szlig;/g;'\

@@ -1424,7 +1424,7 @@ int yLog(const short screen,const short file, const bool oberr,const short klobv
 		vsnprintf(buf,groe,format,args);
 		erg=fLog(buf,screen,file,oberr,klobverb);
 #ifdef vagenau
-		delete buf;
+		delete[] buf;
 		buf=0;
 #endif // vagenau
 		va_end(args);
@@ -5575,11 +5575,11 @@ void hcl::lieszaehlerein()
 	////<<"azaehlerdt: "<<blau<<azaehlerdt<<schwarz<<endl;
 	zlzn.kauswert(&zcnfA);
 	//// if (&aufrufe) <<blau<<"aufrufe: "<<schwarz<<aufrufe<<endl;
-	if (&laufrtag) {
+//	if (&laufrtag) {
 		string ldat;
 		thr_strftime(&laufrtag,&ldat);
 		////<<blau<<"letztes Datum: "<<schwarz<<ldat<<endl;
-	}
+//	}
 	//// if (&tagesaufr) <<blau<<"tagesaufr: "<<schwarz<<tagesaufr<<endl;
 	//// if (&monatsaufr) <<blau<<"monatsaufr: "<<schwarz<<monatsaufr<<endl;
 	hLog(violetts+Txk[T_Ende]+Txk[T_lieszaehlerein]+schwarz);
@@ -5748,7 +5748,7 @@ uchar hcl::pruefcron(const string& cm)
 			setztmpcron();
 			const string vaufr{mpfad+" -noia"}, // /usr/bin/<DPROG> -noia // (vollaufruf) z.B. '/usr/bin/<DPROG> -noia >/dev/null 2>&1'
 						zsaufr{base_name(vaufr)}, // ersetzAllezu(cbef,"/","\\/"); // Suchstring zum Loeschen
-						vorsaetze{" "+linstp->ionicepf+" -c2 -n7 "+linstp->nicepf+" -n19 "},
+						vorsaetze{string(" HOST=\\$(hostname);[ \\${HOST\\%\\%.*}/ = ")+cpt+"/ ]&&"+linstp->ionicepf+" -c2 -n7 "+linstp->nicepf+" -n19 "},
 						cabfr{vorsaetze+".*"+zsaufr},// <DPROG> -noia // Suchstring in Crontab // Befehl zum Abfragen der Cronminuten aus aktuellem Cron-Script
 						cbef{string("*/")+cmhier+" * * * *"+vorsaetze+vaufr+" -cf "+akonfdt+" >/dev/null 2>&1"}, // "-"-Zeichen nur als cron
 						czt{" \\* \\* \\* \\*"};
