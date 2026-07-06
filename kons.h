@@ -475,6 +475,7 @@ enum Tkons_
 	T_pptr_darf_nicht_null_sein_bei,
 	T_rueckfragen,
 	T_Frage_ab,
+	T_dateivgl,
 	T_konsMAX
 }; // Tkons_
 // Konsistenz in gdb pruefen, z.B.:  p (const char* const)reinterpret_cast<TCtp*>(Txk.TCp)[T_unbek][Txk.lgn]
@@ -695,7 +696,7 @@ void doanfg(const string& datei, const string& inhalt, const string& comment);
 
 int touch(const std::string& pathname,int obverb=0,int oblog=0);
 std::string string_to_hex(const std::string& input);
-int dateivgl(const string& d1, const string& d2,uchar obzeit=0);
+int dateivgl(const string& d1, const string& d2,uchar obzeit=0,int obverb=0,int oblog=0);
 void kuerzevtz(string *vzp);
 
 struct svec: vector<std::string>
@@ -1255,7 +1256,7 @@ int wartaufpids(pidvec *pidv,const ulong runden=0,const int obverb=0,const int o
 extern const string s_true; // ="true";
 extern const string s_dampand; // =" && ";
 extern const string s_gz; // ="gz";
-extern const string& defvors; // ="git+ssh://github.com/"+gitv+"/";
+extern const string& defvors; // ="https://github.com/"+gitv+"/";
 extern const string& defnachs; // ="/archive/master.tar.gz";
 void viadd(string *const cmdp,string* const zeigp,const string& datei,const uchar ro=0,const uchar hinten=0, const uchar unten=0);
 int schluss(const int fnr,const string text={},int oblog=0);
@@ -1393,7 +1394,7 @@ struct hcl
 		virtual void virtschlussanzeige();
 	public:
 		virtual void fuv0(),fuv1(),fuv2(),fuv3(),fuv4(),fuv5(),fuv6(),fuv7(),fuv8(),fuv9(),fuv10();
-		virtual int fui0(),fui1(),fui2(),fui3(),fui4(),fui5(),fui6(),fui7(),fui8(),fui9(),fui10();
+		virtual int fui0(),fui1(),fui2(),fui3(),fui4(),fui5(),fui6(),fui7(),fui8(),fui9(),fui10(),fui11();
 		void pruefcl(); // commandline mit omap und mit argcmv parsen
 		hcl(const int argc, const char *const *const argv,const char* const DPROG,const uchar mitcron,const uchar parstreng=1);
 		~hcl();

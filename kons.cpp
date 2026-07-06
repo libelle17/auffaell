@@ -707,6 +707,8 @@ const char *kons_T[T_konsMAX+1][SprachZahl]=
 	{"rueckfragen()","callbacks()"},
 	// T_Frage_ab
 	{"Frage ab: ","Asking for: "},
+  // T_dateivgl
+	{"dateivgl()","filecmp()"},
 	{"",""}
 }; // const char *Txkonscl::TextC[T_konsMAX+1][SprachZahl]=
 
@@ -2052,7 +2054,7 @@ linst_cl::linst_cl(int obverb,int oblog)
 					uypr=upr+"-y ";
 					upd=sudc+"zypper patch";
 					repos=sudc+"zypper lr | grep 'g++\\|devel_gcc'>/dev/null 2>&1 || "+
-						sudc+"zypper ar http://download.opensuse.org/repositories/devel:/gcc/`cat /etc/*-release |"
+						sudc+"zypper ar -f http://download.opensuse.org/repositories/devel:/gcc/`cat /etc/*-release |"
 						"grep ^NAME= | cut -d'\"' -f2 | sed 's/ /_/'`_`cat /etc/*-release | grep ^VERSION_ID= | cut -d'\"' -f2`/devel:gcc.repo;";
 					compil="gcc gcc-c++ gcc6-c++";
 					break;
@@ -2548,6 +2550,7 @@ string dir_name(const string& path)
   return path.substr(0,letzt);
 } // string dir_name(string const & path)
 
+
 // soll fuer den Fall eines uebergebenen 'rueck'-Zeigers den Rueckgabewert der aufgerufenen Funktion zuruckliefern,
 // ausser bei 'find', da die Zahl der Funde
 // bei rueck==0 liefert es das Ergebnis der system(..)-Funktion zurueck
@@ -2604,10 +2607,11 @@ int systemrueck(const string& cmd, int obverb/*=0*/, int oblog/*=0*/, vector<str
 	char tmpd[tmpd0.size()+1];
 	strcpy(tmpd,tmpd0.c_str());
 	const int mksterg{mkstemp(tmpd)};
+	if (mksterg!=-1) close(mksterg);
 	// '... 2>/dev/null' nicht unbedingt aufheben
 	const string bef{(obsudc?sudc+(obsudc==2&&!sudc.empty()?"-H ":""):"")+
-		(obdirekt?hcmd:"env PATH='"+spath+"' "+"sh -c '"+ersetzAllezu(hcmd,"'","'\\''")+"'"+
-		 (mksterg!=-1&&(hcmd.find(" 2>")==string::npos||obverb>0)?string(" 2>")+tmpd:string()))};
+		(obdirekt?hcmd:"env PATH='"+spath+"' "+"sh -c '"+ersetzAllezu(hcmd,"'","'\\''")+"'"
+		 +(mksterg!=-1&&(hcmd.find(" 2>")==string::npos||obverb>0)?string(" 2>")+tmpd:string()))};
 	const string befanz{ersetze(bef.c_str(),spath.c_str(),"...")};
 	const string hsubs{befanz.substr(0,getcols()-7-aktues.length())};
 	string meld{aktues+": "+blau+hsubs+schwarz+" ..."};
@@ -2617,22 +2621,23 @@ int systemrueck(const string& cmd, int obverb/*=0*/, int oblog/*=0*/, vector<str
 	} else { 
 		if (obverb||oblog) fLog(meld,obverb>0?-1:0,oblog); 
 	}
-	if (!rueck) if (obergebnisanzeig) {neurueck=1;rueck=new vector<string>;}
-	// #define systemrueckprofiler
+  if (!rueck) if (obergebnisanzeig) {neurueck=1;rueck=new vector<string>;}
+  // #define systemrueckprofiler
 #ifdef systemrueckprofiler
-	perfcl prf("systemrueck");
+  perfcl prf("systemrueck");
 #endif // systemrueckprofiler
-	// obsudc==0 nichts, obsudc==1: "sudo ", obsudc==2: "sudo -H "
-////	<<violett<<"bef: "<<blau<<bef<<schwarz<<endl;
-	if (rueck) {
-		//// <<gruen<<bef<<schwarz<<endl;
+  // obsudc==0 nichts, obsudc==1: "sudo ", obsudc==2: "sudo -H "
+  ////	<<violett<<"bef: "<<blau<<bef<<schwarz<<endl;
+  if (rueck) {
+    //// <<gruen<<bef<<schwarz<<endl;
+    // caus<<violett<<bef<<schwarz<<endl;
     if (FILE* pipe{popen(bef.c_str(),"r")}) {
-		/*//
-		int fd=fileno(pipe);
-		int flags=fcntl(fd, F_GETFL, 0);
-		flags|=O_NONBLOCK;
-		fcntl(fd, F_SETFL, flags);
-		*/
+      /*//
+        int fd=fileno(pipe);
+        int flags=fcntl(fd, F_GETFL, 0);
+        flags|=O_NONBLOCK;
+        fcntl(fd, F_SETFL, flags);
+       */
 #ifdef systemrueckprofiler
       prf.ausgeb();
 #endif
@@ -3044,6 +3049,10 @@ int pruefberecht(const string& datei,const string& benutzer,const mode_t mod/*=0
 {
 	int bererg{0};
 	const auto pwnamzg{getpwnam(benutzer.c_str())};
+	if (obverb) {
+		fLog(violetts+Txk[T_pruefberecht]+schwarz+Txk[T_Datei]+blau+datei+schwarz+Txk[T_Benutzer]+blau+benutzer+schwarz+", mode: "+blau+ltoan(mod,8)+
+				schwarz+Txk[T_Erg]+blau+(bererg==3?"3":bererg==2?"2":bererg==1?"1":"0")+schwarz,obverb,0);
+	}
 	if (pwnamzg) {
 		const uid_t uid{pwnamzg->pw_uid};
 		gid_t gid;
@@ -3125,7 +3134,7 @@ int pruefberecht(const string& datei,const string& benutzer,const mode_t mod/*=0
 		bererg=3; // Benutzer gibt es nicht
 	}
 	if (obverb) {
-		fLog(violetts+Txk[T_pruefberecht]+schwarz+Txk[T_Datei]+blau+datei+schwarz+Txk[T_Benutzer]+blau+benutzer+schwarz+", mode: "+blau+ltoan(mod,8)+
+		fLog(violetts+Txk[T_Ende]+Txk[T_pruefberecht]+schwarz+Txk[T_Datei]+blau+datei+schwarz+Txk[T_Benutzer]+blau+benutzer+schwarz+", mode: "+blau+ltoan(mod,8)+
 				schwarz+Txk[T_Erg]+blau+(bererg==3?"3":bererg==2?"2":bererg==1?"1":"0")+schwarz,obverb,0);
 	}
 	return bererg;
@@ -3244,7 +3253,8 @@ int pruefverz(const string& verz,int obverb/*=0*/,int oblog/*=0*/, uchar obmitfa
 			if (obselinux==-1) 
 				obselinux=obprogda("sestatus",obverb,oblog,/*pfad*/0,keinsu);
 			if (obselinux) {
-				systemrueck("chcon -R -t samba_share_t '"+verz+"'",obverb,oblog,/*rueck=*/0,/*obsudc=*/1);
+//				systemrueck("chcon -R -t samba_share_t '"+verz+"'",obverb,oblog,/*rueck=*/0,/*obsudc=*/1);
+				systemrueck("if test $(ls -Zd '"+verz+"'|awk '{print $1}'|cut -d: -f3) != samba_share_t; then chcon -R -t samba_share_t '"+verz+"';fi",obverb,oblog,/*rueck=*/0,/*obsudc=*/1);
 			}
 		} // 		if (obmitcon)
 	} // 	if (!verz.empty())
@@ -4131,7 +4141,7 @@ int servc::machfit(int obverb/*=0*/,int oblog/*=0*/, binaer nureinmal/*=falsch*/
 	////  if (servicelaeuft)
 	if (!svfeh&&!obenabled)
 		enableggf(obverb,oblog);
-	fLog(violetts+"Ende "+Txk[T_machfit]+schwarz+" sname: "+violett+sname+schwarz+" svfeh: "+blau+ltoan(svfeh)+schwarz, obverb,oblog);
+	fLog(violetts+Txk[T_Ende]+Txk[T_machfit]+schwarz+" sname: "+violett+sname+schwarz+" svfeh: "+blau+ltoan(svfeh)+schwarz, obverb,oblog);
 	return !svfeh;
 } // int servc::machfit
 
@@ -5068,8 +5078,9 @@ void findfile(svec *qrueckp,uchar findv,int obverb/*=0*/,int oblog/*=0*/,uchar a
 #endif // #if defined(altfind) && defined(neufind)
 
 // 1= Dateien unterschiedlich, 0 = gleich; obzeit => vergleiche auch die letzte Aenderungszeit
-int dateivgl(const string& d1, const string& d2,uchar obzeit/*=0*/)
+int dateivgl(const string& d1, const string& d2,uchar obzeit/*=0*/,int obverb/*=0*/, int oblog/*=0*/)
 {
+	fLog(violetts+Txk[T_dateivgl]+schwarz+d1+", "+d2+", "+(obzeit?"1":"0"),obverb,oblog);
 	int erg{0};
 	// wenn ein Unterschied am Anfang der Dateien war oder die Groesse < 300 kB lag, war boost schneller; 'cmp' war nie schneller als 'diff'.
 	////	perfcl prf("vgl");
@@ -5094,6 +5105,7 @@ int dateivgl(const string& d1, const string& d2,uchar obzeit/*=0*/)
 		} // 		if (lst1||st1.st_size>1000000) else
 	} // 	if (!erg)
 	////	prf.ausgeb();
+	fLog(violetts+Txk[T_Ende]+Txk[T_dateivgl]+schwarz,obverb,oblog);
 	return erg;
 } // int dateivgl(const string& d1, const string& d2)
 
@@ -5295,6 +5307,7 @@ void hcl::virtlgnzuw()
 		Txk.lgn=deutsch;
 	} // 	if (langu=="d" || langu=="D" || langu=="deutsch" || langu=="Deutsch") else else
 	Tx.lgn=Txk.lgn;
+	fLog(violetts+Txk[T_Ende]+Txk[T_virtlgnzuw_langu]+schwarzs+": "+langu,obverb,oblog);
 } // void hcl::virtlgnzuw
 
 // wird aufgerufen in paramcl::paramcl, pruefunpaper, holvomnetz, kompilbase, kompilfort
@@ -5381,7 +5394,6 @@ void hcl::parsecl()
 {
 	hLog(violetts+Txk[T_parsecl]+schwarz);
 	// (opts[optslsz].pruefpar(&argcmv,&i,&obhilfe))
-	if (obverb) obverb=0; // damit nicht aus -v obverb=2 wird
 	vector<argcl>::iterator ap,apn;
 	for(ap=argcmv.begin();ap!=argcmv.end();ap++) {
 		uchar nichtspeichern{0}, gegenteil{0}, kurzp{0}, langp{0};
@@ -5420,26 +5432,25 @@ void hcl::parsecl()
 						// omit ist also jetzt iterator fuer die relevante map auf die aktuelle Option (kurz oder lang)
 						if (omit->first) if (!strcmp(omit->first,acstr)) {
 							ap->agef++; // Parameter gefunden
-							hLog(Txk[T_Parameter]+blaus+acstr+schwarz+Txk[T_gefunden]+(omit->second->pptr?"1":"0"));
+							string hierlog{Txk[T_Parameter]+blaus+acstr+schwarz+Txk[T_gefunden]+"second->pptr: "+(omit->second->pptr?"1":"0")};
 							if (omit->second->pptr) {
-								hLog(Txk[T_pptr_gefunden]);
 								// pzuweis liefert -1, wenn der naechste Parameter als Inhalt verwendet wurde, sonst pcfnr
 								apn=ap; apn++;
-								const char *nacstr=apn==argcmv.end()?"":apn->argcs;
-								optcl* trick=(optcl*)omit->second;
-								int pcfnr{trick->pzuweis(nacstr,gegenteil,nichtspeichern)};
-								//int pcfnr=omit->second->pzuweis(nacstr,gegenteil,nichtspeichern);
+								const char * const nacstr=apn==argcmv.end()?"":apn->argcs;
+								optcl* const trick{(optcl*)omit->second};
+								const int pcfnr{trick->pptr==&obverb?0:trick->pzuweis(nacstr,gegenteil,nichtspeichern)}; // obverb in holbefz0 schon zugewiesen
 								if (pcfnr==-1) { // String-Parameter erfolgreich zugewiesen
 									ap++;
 									ap->agef++; // Zusatzparameter gefunden
 									if (ap==argcmv.end()) break;
+									hierlog+=", nachstr: "+string(nacstr);
 								}
 								if (pcfnr<=0) { // erfolgreich zugewiesen
-									if (omit->second->pptr==&langu) {
+									if (trick->pptr==&langu) {
 										virtlgnzuw();
-									} else if (omit->second->pptr==&logvz || omit->second->pptr==&logdname) {
+									} else if (trick->pptr==&logvz || trick->pptr==&logdname) {
 										setzlog();
-									} else if (omit->second->pptr==&cronminut) {
+									} else if (trick->pptr==&cronminut) {
 										keineverarbeitung=1;
 										cmeingegeben=1;
 									}
@@ -5449,6 +5460,7 @@ void hcl::parsecl()
 									if (!obhilfe) obhilfe=1;
 								} // 								if (pcfnr<=0) else
 							} // 								if (omit->second->pptr)
+							hLog(hierlog);
 							break; // Parameter schon gefunden, die anderen nicht mehr suchen
 						} // 							if (!omit->first.find(acstr))
 					} // 						for(omit=omp->begin();omit!=omp->end();omit++)
@@ -5461,7 +5473,7 @@ void hcl::parsecl()
 	if (parstreng)
 		for(size_t i=0;i<argcmv.size();i++) {
 			if (!argcmv[i].agef) {
-				exit(schluss(17,rots+"Parameter: "+gruen+argcmv[i].argcs+rot+Txk[T_nicht_erkannt]+schwarz));
+				exit(schluss(17,rots+Txk[T_Parameter]+gruen+argcmv[i].argcs+rot+Txk[T_nicht_erkannt]+schwarz));
 				if (!obhilfe) obhilfe=1;
 			} //     if (!argcmv[i].agef)
 		} //   for(size_t i=0;i<argcmv.size();i++)
@@ -5576,10 +5588,11 @@ void hcl::lieszaehlerein()
 	zlzn.kauswert(&zcnfA);
 	//// if (&aufrufe) <<blau<<"aufrufe: "<<schwarz<<aufrufe<<endl;
 //	if (&laufrtag) {
+  {
 		string ldat;
 		thr_strftime(&laufrtag,&ldat);
 		////<<blau<<"letztes Datum: "<<schwarz<<ldat<<endl;
-//	}
+	}
 	//// if (&tagesaufr) <<blau<<"tagesaufr: "<<schwarz<<tagesaufr<<endl;
 	//// if (&monatsaufr) <<blau<<"monatsaufr: "<<schwarz<<monatsaufr<<endl;
 	hLog(violetts+Txk[T_Ende]+Txk[T_lieszaehlerein]+schwarz);
@@ -5614,7 +5627,7 @@ void hcl::virtzeigversion(const string& ltiffv/*=string()*/)
 	//// strftime(buf, sizeof(buf), "%d.%m.%Y %T", &tm);
 	//// cout<<"              "<<Txk[T_Kompiliert]<<blau<<buf<<schwarz<<endl;
 	cout<<"              "<<Txk[T_Kompiliert]<<blau<<put_time(&tm,"%d.%m.%Y %T")<<schwarz<<endl;
-	cout<<Txk[T_Quelle]<<blau<<defvors/*//"git+ssh://github.com/libelle17/"*/<<meinname<<schwarz<<endl;
+	cout<<Txk[T_Quelle]<<blau<<defvors/*//"https://github.com/libelle17/"*/<<meinname<<schwarz<<endl;
 	cout<<Txk[T_Installationsverzeichnis]<<blau<<instvz<<schwarz<<endl;
 	if (!ltiffv.empty())
 		cout<<Txk[T_Libtiff_Version]<<blau<<ltiffv.substr(0,ltiffv.find("\n"))<<schwarz<<endl;
@@ -5855,7 +5868,8 @@ void hcl::gitpull(const string& DPROG)
 {
 	if (autoupd && tagesaufr == 2) {
 ////		perfcl perf("main");
-		if (systemrueck("wget https://raw.githubusercontent.com/"+gitv+"/"+DPROG+"/master/versdt -qO"+instvz+"/versdtakt&&"
+//		if (systemrueck("wget https://raw.githubusercontent.com/"+gitv+"/"+DPROG+"/master/versdt -qO"+instvz+"/versdtakt&&" // geandert 13.2.22
+		if (systemrueck("curl -sL https://raw.githubusercontent.com/"+gitv+"/"+DPROG+"/master/versdt >"+instvz+"/versdtakt&&"
 					/*//				"[ $(echo $(cat "+instvz+"/versdtakt)'>'$(cat "+instvz+"/versdt)|bc -l) -eq 0 ]",2,oblog))*/
 			// Berechnung mit |bc -l schlecht, da z.B. auf Ubuntu bc nicht unbedingt standardmaessig installiert
 			"awk \"BEGIN{print $(cat "+instvz+"/versdt)-$(cat "+instvz+"/versdtakt)}\"|grep -q ^-",obverb,oblog,/*rueck=*/0,/*obsudc=*/0)) {
@@ -6494,7 +6508,7 @@ int optcl::pzuweis(const char *const nacstr, const uchar vgegenteil/*=0*/, const
 
 // zum Ueberladen
 void hcl::fuv0(){}; void hcl::fuv1(){}; void hcl::fuv2(){}; void hcl::fuv3(){}; void hcl::fuv4(){}; void hcl::fuv5(){}; void hcl::fuv6(){}; void hcl::fuv7(){}; void hcl::fuv8(){}; void hcl::fuv9(){}; void hcl::fuv10(){};
-int hcl::fui0(){return 0;}; int hcl::fui1(){return 0;}; int hcl::fui2(){return 0;}; int hcl::fui3(){return 0;}; int hcl::fui4(){return 0;}; int hcl::fui5(){return 0;}; int hcl::fui6(){return 0;}; int hcl::fui7(){return 0;}; int hcl::fui8(){return 0;}; int hcl::fui9(){return 0;}; int hcl::fui10(){return 0;};
+int hcl::fui0(){return 0;}; int hcl::fui1(){return 0;}; int hcl::fui2(){return 0;}; int hcl::fui3(){return 0;}; int hcl::fui4(){return 0;}; int hcl::fui5(){return 0;}; int hcl::fui6(){return 0;}; int hcl::fui7(){return 0;}; int hcl::fui8(){return 0;}; int hcl::fui9(){return 0;}; int hcl::fui10(){return 0;}; int hcl::fui11(){return 0;};
 
 optcl::optcl(const string& pname,const void* pptr,const par_t part, const int kurzi, const int langi, TxB* TxBp, const long Txi, const uchar wi, const long Txi2, const string rottxt, const int iwert,const uchar woher, const string& Txtrf/*={}*/,const uchar obno/*=(uchar)-1*/,const string* refstr/*=0*/,const uchar* obfragz/*=0*/,fnhcliztyp fnobfragz/*=0*/,fnhclztyp fnnachhz/*=0*/,fnhclztyp fnvorhz/*=0*/,uchar sonderrf/*=0*/,fnhcliztyp fngueltigz/*=0*/):
 	wpgcl(pname,pptr,part),
@@ -6531,7 +6545,8 @@ void hcl::pruefsamba(const vector<const string*>& vzn,const svec& abschni,const 
 	uchar obinst{0}; // ob Samba installiert werden soll bzw. die smb.conf bearbeitet
 	uchar obfw{0}; // ob SuSEfirewall bearbeitet werden soll
 	//// <<violett<<"Stelle 0"<<endl;systemrueck("systemctl -n 0 status 'nmbd'",obverb,oblog,/*rueck=*/0,/*obsudc=*/0);
-	linstp->doggfinst("libwbclient0",obverb,oblog);
+//	linstp->doggfinst("libwbclient0",obverb,oblog);
+	linstp->doggfinst("samba-client-libs",obverb,oblog);
 	// bei dieser Initialisierung werden nur die Namen zugewiesen
 	servc smb("smb","smbd");
 	servc smbd("smbd","smbd");
